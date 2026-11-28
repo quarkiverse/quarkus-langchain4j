@@ -12674,6 +12674,27 @@ endif::add-copy-button-to-env-var[]
 |int
 |`+++1000+++`
 
+a| [[quarkus-langchain4j-core_quarkus-langchain4j-evaluation-run]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-evaluation-run[`+++quarkus.langchain4j.evaluation.run+++`]##
+ifdef::add-copy-button-to-config-props[]
+config_property_copy_button:+++quarkus.langchain4j.evaluation.run+++[]
+endif::add-copy-button-to-config-props[]
+
+
+[.description]
+--
+Identifies the current test run, set by the `evaluation-junit5` module each time the JUnit Platform starts executing tests. Internal, not meant to be configured.
+
+
+ifdef::add-copy-button-to-env-var[]
+Environment variable: env_var_with_copy_button:+++QUARKUS_LANGCHAIN4J_EVALUATION_RUN+++[]
+endif::add-copy-button-to-env-var[]
+ifndef::add-copy-button-to-env-var[]
+Environment variable: `+++QUARKUS_LANGCHAIN4J_EVALUATION_RUN+++`
+endif::add-copy-button-to-env-var[]
+--
+|string
+|
+
 a| [[quarkus-langchain4j-core_quarkus-langchain4j-log-requests]] [.property-path]##link:#quarkus-langchain4j-core_quarkus-langchain4j-log-requests[`+++quarkus.langchain4j.log-requests+++`]##
 ifdef::add-copy-button-to-config-props[]
 config_property_copy_button:+++quarkus.langchain4j.log-requests+++[]

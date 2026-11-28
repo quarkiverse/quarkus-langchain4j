@@ -15,7 +15,20 @@
     <name>Quarkus LangChain4j - Samples - Chatbot Evaluation Testing</name>
     <description>Sample demonstrating comprehensive evaluation testing with semantic similarity and AI judge strategies</description>
 
+    <properties>
+        <!-- Most tests call OpenAI, which CI has no key for. Run with -DskipTests=false; OfflineBaselineEvaluationTest
+             needs no key -->
+        <skipTests>true</skipTests>
+    </properties>
+
     <dependencies>
+        <!-- provided: the offline walkthrough points the models at this mock, the packaged application is not affected -->
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-mock-api</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest</artifactId>
@@ -61,6 +74,19 @@
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkiverse.langchain4j</groupId>
+            <artifactId>quarkus-langchain4j-mock-api-deployment</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+            <type>pom</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 

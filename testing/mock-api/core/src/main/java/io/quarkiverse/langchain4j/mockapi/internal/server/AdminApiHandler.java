@@ -10,6 +10,7 @@ import io.quarkiverse.langchain4j.mockapi.internal.dialect.Dialect;
 import io.quarkiverse.langchain4j.mockapi.internal.dialect.DialectRegistry;
 import io.quarkiverse.langchain4j.mockapi.internal.json.MockApiJson;
 import io.quarkiverse.langchain4j.mockapi.internal.model.RawStub;
+import io.quarkiverse.langchain4j.mockapi.internal.model.ReplyRule;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
@@ -55,6 +56,9 @@ final class AdminApiHandler {
             noContent(resp);
         } else if (method.equals("PUT") && seg.length == 4 && seg[1].equals("replies") && seg[3].equals("default")) {
             state.setDefault(operation(seg[2]), MAPPER.readValue(body, Reply.class));
+            noContent(resp);
+        } else if (method.equals("POST") && seg.length == 3 && seg[1].equals("rules") && seg[2].equals("chat")) {
+            state.addRule(MAPPER.readValue(body, ReplyRule.class));
             noContent(resp);
         } else if (method.equals("POST") && seg.length == 2 && seg[1].equals("raw-stubs")) {
             state.addRawStub(MAPPER.readValue(body, RawStub.class));

@@ -6,9 +6,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Report of the evaluation of a set of samples.
@@ -26,6 +30,7 @@ public class EvaluationReport<T> {
     private final List<Scorer.EvaluationResult<T>> evaluations;
     private final List<Scorer.EvaluationResult<T>> blockingEvaluations;
     private final int trials;
+    private final List<String> strategies;
     private final double score;
 
     /**
@@ -44,6 +49,17 @@ public class EvaluationReport<T> {
      * @param trials the number of times each sample was executed, at least 1
      */
     public EvaluationReport(List<Scorer.EvaluationResult<T>> evaluations, int trials) {
+        this(evaluations, trials, List.of());
+    }
+
+    /**
+     * Create a new evaluation report that records the strategies which produced the evaluations.
+     *
+     * @param evaluations the evaluations, must not be {@code null}.
+     * @param trials the number of times each sample was executed, at least 1
+     * @param strategies the names of the strategies, in the order they were applied, must not be {@code null}.
+     */
+    public EvaluationReport(List<Scorer.EvaluationResult<T>> evaluations, int trials, List<String> strategies) {
         if (trials < 1) {
             throw new IllegalArgumentException("Trials must be at least 1, got: " + trials);
         }
@@ -51,6 +67,7 @@ public class EvaluationReport<T> {
         // The evaluations that count toward the score: those not produced by an advisory strategy.
         this.blockingEvaluations = evaluations.stream().filter(e -> !e.advisory()).toList();
         this.trials = trials;
+        this.strategies = List.copyOf(strategies);
         this.score = scoreOf(blockingEvaluations);
     }
 
@@ -68,6 +85,14 @@ public class EvaluationReport<T> {
      */
     public double advisoryScore() {
         return scoreOf(evaluations.stream().filter(Scorer.EvaluationResult::advisory).toList());
+    }
+
+    /**
+     * @return the names of the strategies that produced this report, in the order they were applied. Empty when the
+     *         report was created without them.
+     */
+    public List<String> strategies() {
+        return strategies;
     }
 
     /**
@@ -170,6 +195,81 @@ public class EvaluationReport<T> {
             double margin = Z_95 * standardError;
             return new Interval(Math.max(0.0, score - margin), Math.min(100.0, score + margin));
         }
+    }
+
+    /**
+     * The names shared by distinct samples of this report. One sample evaluated in several trials or by several
+     * strategies appears several times in the report and is not a duplicate.
+     *
+     * @return the duplicated sample names, in order of first appearance
+     */
+    public List<String> duplicateSampleNames() {
+        Set<EvaluationSample<?>> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+        Map<String, Integer> samplesByName = new LinkedHashMap<>();
+        for (Scorer.EvaluationResult<T> evaluation : evaluations) {
+            EvaluationSample<?> sample = evaluation.sample();
+            if (seen.add(sample)) {
+                samplesByName.merge(sample.name(), 1, Integer::sum);
+            }
+        }
+        List<String> duplicates = samplesByName.entrySet().stream().filter(e -> e.getValue() > 1)
+                .map(Map.Entry::getKey).toList();
+        return duplicates;
+    }
+
+    /**
+     * Compare this report with the baseline of a previous run, sample by sample.
+     * <p>
+     * When the baseline was produced with a different number of trials, or with different strategies (compared
+     * only if both sides know theirs), the runs are not comparable: the result then carries an
+     * {@link BaselineComparison#incompatibility()} and no differences.
+     * </p>
+     *
+     * @param baseline the snapshot of the previous run, must not be {@code null}
+     * @return the comparison
+     * @throws IllegalArgumentException if two distinct samples of this report share a name
+     */
+    public BaselineComparison compareWith(EvaluationSnapshot baseline) {
+        List<String> duplicates = duplicateSampleNames();
+        if (!duplicates.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Sample names must be unique, found duplicates: " + String.join(", ", duplicates));
+        }
+        if (baseline.trials() != trials) {
+            return incompatible("the baseline was produced with " + baseline.trials()
+                    + " trials per sample and this run with " + trials);
+        }
+        if (!baseline.strategies().isEmpty() && !strategies.isEmpty() && !baseline.strategies().equals(strategies)) {
+            return incompatible("the baseline was produced with strategies " + baseline.strategies()
+                    + " and this run with " + strategies);
+        }
+        EvaluationSnapshot current = EvaluationSnapshot.of(this);
+        Map<String, Double> baselineScores = baseline.sampleScores();
+        Map<String, Double> currentScores = current.sampleScores();
+
+        List<String> baselineNames = baseline.sampleNames();
+        List<String> currentNames = current.sampleNames();
+
+        List<BaselineComparison.SampleDifference> differences = new ArrayList<>();
+        currentScores.forEach((name, score) -> {
+            if (baselineScores.containsKey(name)) {
+                differences.add(new BaselineComparison.SampleDifference(name, baselineScores.get(name), score));
+            }
+        });
+        // added and removed cover samples with advisory evaluations only too
+        List<String> added = currentNames.stream().filter(name -> !baselineNames.contains(name)).toList();
+        List<String> removed = baselineNames.stream().filter(name -> !currentNames.contains(name)).toList();
+
+        Map<String, Double> baselineAdvisory = baseline.advisorySampleScores();
+        double advisoryDifference = current.advisorySampleScores().entrySet().stream()
+                .filter(e -> baselineAdvisory.containsKey(e.getKey()))
+                .mapToDouble(e -> e.getValue() - baselineAdvisory.get(e.getKey()))
+                .average().orElse(0.0);
+        return new BaselineComparison(differences, added, removed, advisoryDifference, Optional.empty());
+    }
+
+    private static BaselineComparison incompatible(String reason) {
+        return new BaselineComparison(List.of(), List.of(), List.of(), 0.0, Optional.of(reason));
     }
 
     /**

@@ -45,6 +45,87 @@ class ScorerTest {
         assertThat(report.score()).isEqualTo(100.0);
     }
 
+    static class JudgeStrategy implements EvaluationStrategy<String> {
+        @Override
+        public EvaluationResult evaluate(EvaluationSample<String> sample, String output) {
+            return EvaluationResult.fromBoolean(true);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void reportListsStrategyNamesInOrder() {
+        EvaluationSample<String> sample = new EvaluationSample<>("Sample", new Parameters(), "expected", List.of());
+
+        EvaluationReport<String> report = new Scorer().evaluate(new Samples<>(sample), params -> "expected",
+                new JudgeStrategy(), EvaluationStrategy.toAdvisory(new JudgeStrategy()));
+
+        assertThat(report.strategies()).containsExactly("JudgeStrategy", "JudgeStrategy (advisory)");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void lambdaStrategiesHaveStableNames() {
+        EvaluationSample<String> sample = new EvaluationSample<>("Sample", new Parameters(), "expected", List.of());
+        EvaluationStrategy<String> lambda = (s, output) -> EvaluationResult.fromBoolean(true);
+
+        EvaluationReport<String> report = new Scorer().evaluate(new Samples<>(sample), params -> "expected",
+                lambda, EvaluationStrategy.toAdvisory(lambda));
+
+        assertThat(report.strategies()).containsExactly("lambda", "lambda (advisory)");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void anonymousStrategiesHaveStableNames() {
+        EvaluationSample<String> sample = new EvaluationSample<>("Sample", new Parameters(), "expected", List.of());
+        EvaluationStrategy<String> anonymous = new EvaluationStrategy<>() {
+            @Override
+            public EvaluationResult evaluate(EvaluationSample<String> s, String output) {
+                return EvaluationResult.fromBoolean(true);
+            }
+        };
+
+        EvaluationReport<String> report = new Scorer().evaluate(new Samples<>(sample), params -> "expected",
+                anonymous, EvaluationStrategy.toAdvisory(anonymous));
+
+        assertThat(report.strategies()).containsExactly("ScorerTest$1", "ScorerTest$1 (advisory)");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void advisoryStrategyShouldBeLoggedWithTheNameOfTheWrappedStrategy() {
+        scorer = new Scorer(1);
+        EvaluationSample<String> sample = new EvaluationSample<>("Sample", new Parameters(), "expected", List.of());
+        List<String> messages = new java.util.concurrent.CopyOnWriteArrayList<>();
+        java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Scorer.class.getName());
+        java.util.logging.Handler handler = new java.util.logging.Handler() {
+            @Override
+            public void publish(java.util.logging.LogRecord record) {
+                messages.add(new java.util.logging.SimpleFormatter().formatMessage(record));
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
+
+        logger.addHandler(handler);
+        try {
+            scorer.evaluate(new Samples<>(sample), params -> "expected",
+                    EvaluationStrategy.toAdvisory(new JudgeStrategy()));
+        } finally {
+            logger.removeHandler(handler);
+        }
+
+        assertThat(messages).anySatisfy(m -> assertThat(m)
+                .contains("Evaluation of sample `Sample` with strategy `JudgeStrategy (advisory)`"));
+    }
+
     @SuppressWarnings("unchecked")
     @Test
     void throwingFunctionShouldBlockEvenWithAdvisoryStrategies() {
@@ -201,6 +282,37 @@ class ScorerTest {
         assertThat(report.score()).isEqualTo(100.0); // Both strategies should pass for the sample.
         assertThat(report.evaluations()).hasSize(2); // One result per strategy.
         report.evaluations().forEach(e -> assertThat(e.passed()).isTrue());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void resultsRecordTheirTrialAndStrategy() {
+        scorer = new Scorer(2, 2);
+        EvaluationSample<String> sample = new EvaluationSample<>("S", new Parameters(), "ok", List.of());
+        EvaluationStrategy<String> exact = (s, actual) -> EvaluationResult.fromBoolean(actual.equals("ok"));
+        EvaluationStrategy<String> judge = EvaluationStrategy
+                .toAdvisory((s, actual) -> EvaluationResult.failed("too short"));
+
+        EvaluationReport<String> report = scorer.evaluate(new Samples<>(sample), params -> "ok", exact, judge);
+
+        assertThat(report.evaluations()).extracting(e -> e.trial() + " " + e.strategy())
+                .containsExactly("1 lambda", "1 lambda (advisory)", "2 lambda", "2 lambda (advisory)");
+        assertThat(report.evaluations().get(1).explanation()).isEqualTo("too short");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void aSampleThatCannotBeExecutedRecordsItsTrialButNoStrategy() {
+        scorer = new Scorer(1, 2);
+        EvaluationSample<String> sample = new EvaluationSample<>("S", new Parameters(), "ok", List.of());
+        EvaluationStrategy<String> exact = (s, actual) -> EvaluationResult.fromBoolean(true);
+
+        EvaluationReport<String> report = scorer.evaluate(new Samples<>(sample), params -> {
+            throw new IllegalStateException("down");
+        }, exact);
+
+        assertThat(report.evaluations()).extracting(e -> e.trial() + " " + e.strategy())
+                .containsExactlyInAnyOrder("1 null", "2 null");
     }
 
     @SuppressWarnings("unchecked")

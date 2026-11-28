@@ -49,6 +49,15 @@ public class JsonReportFormatter implements ReportFormatter {
         json.append(",").append(newline);
         appendField(json, "trials", String.valueOf(report.trials()), indent, newline);
         json.append(",").append(newline);
+        json.append(indent).append("\"strategies\": [");
+        for (int i = 0; i < report.strategies().size(); i++) {
+            if (i > 0) {
+                json.append(", ");
+            }
+            json.append("\"").append(escapeJson(report.strategies().get(i))).append("\"");
+        }
+        json.append("]");
+        json.append(",").append(newline);
         appendField(json, "advisoryScore", String.format("%.2f", report.advisoryScore()), indent, newline);
         json.append(",").append(newline);
 
@@ -99,17 +108,35 @@ public class JsonReportFormatter implements ReportFormatter {
             Scorer.EvaluationResult<T> eval = report.evaluations().get(i);
 
             json.append(indent).append(indent).append("{").append(newline);
-            appendField(json, "name", escapeJson(eval.sample().name()), indent + indent + indent, newline);
+            appendString(json, "name", eval.sample().name(), indent + indent + indent, newline);
             json.append(",").append(newline);
             appendField(json, "passed", String.valueOf(eval.passed()), indent + indent + indent, newline);
             json.append(",").append(newline);
             appendField(json, "advisory", String.valueOf(eval.advisory()), indent + indent + indent, newline);
             json.append(",").append(newline);
-            appendField(json, "expectedOutput", escapeJson(String.valueOf(eval.sample().expectedOutput())),
+            appendString(json, "expectedOutput", String.valueOf(eval.sample().expectedOutput()),
                     indent + indent + indent, newline);
             json.append(",").append(newline);
-            appendField(json, "actualOutput", escapeJson(String.valueOf(eval.result())),
-                    indent + indent + indent, newline);
+            if (eval.result() == null) {
+                json.append(indent).append(indent).append(indent).append("\"actualOutput\": null");
+            } else {
+                appendString(json, "actualOutput", String.valueOf(eval.result()), indent + indent + indent, newline);
+            }
+            if (eval.trial() > 0) {
+                json.append(",").append(newline);
+                appendField(json, "trial", String.valueOf(eval.trial()), indent + indent + indent, newline);
+            }
+            if (eval.strategy() != null) {
+                json.append(",").append(newline);
+                appendString(json, "strategy", eval.strategy(), indent + indent + indent, newline);
+            }
+            if (eval.thrown() != null) {
+                json.append(",").append(newline);
+                appendString(json, "error", describe(eval.thrown()), indent + indent + indent, newline);
+            } else if (eval.explanation() != null && !eval.explanation().isBlank()) {
+                json.append(",").append(newline);
+                appendString(json, "explanation", eval.explanation(), indent + indent + indent, newline);
+            }
 
             if (!eval.sample().tags().isEmpty()) {
                 json.append(",").append(newline);
@@ -136,8 +163,25 @@ public class JsonReportFormatter implements ReportFormatter {
         return json.toString();
     }
 
+    /**
+     * The innermost cause, which names what went wrong rather than which step it interrupted.
+     */
+    static String describe(Throwable thrown) {
+        Throwable cause = thrown;
+        while (cause.getCause() != null && cause.getCause() != cause) {
+            cause = cause.getCause();
+        }
+        return cause.getMessage() == null ? cause.getClass().getName()
+                : cause.getClass().getName() + ": " + cause.getMessage();
+    }
+
+    private void appendString(StringBuilder json, String key, String value, String indent, String newline) {
+        json.append(indent).append("\"").append(escapeJson(key)).append("\": ");
+        json.append("\"").append(escapeJson(value)).append("\"");
+    }
+
     private void appendField(StringBuilder json, String key, String value, String indent, String newline) {
-        json.append(indent).append("\"").append(key).append("\": ");
+        json.append(indent).append("\"").append(escapeJson(key)).append("\": ");
         if (isNumericOrBoolean(value)) {
             json.append(value);
         } else {
@@ -153,10 +197,23 @@ public class JsonReportFormatter implements ReportFormatter {
         if (value == null) {
             return "";
         }
-        return value.replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
+        StringBuilder escaped = new StringBuilder(value.length());
+        for (char c : value.toCharArray()) {
+            switch (c) {
+                case '\\' -> escaped.append("\\\\");
+                case '"' -> escaped.append("\\\"");
+                case '\n' -> escaped.append("\\n");
+                case '\r' -> escaped.append("\\r");
+                case '\t' -> escaped.append("\\t");
+                default -> {
+                    if (c < 0x20) {
+                        escaped.append(String.format("\\u%04x", (int) c));
+                    } else {
+                        escaped.append(c);
+                    }
+                }
+            }
+        }
+        return escaped.toString();
     }
 }

@@ -1,0 +1,18 @@
+%% Source for modules/ROOT/assets/images/evaluation-baseline-workflow.svg.
+%% Regenerate with: npm run diagrams (see "Regenerating diagrams" in docs/README.adoc).
+%%{init: {"flowchart": {"rankSpacing": 30, "wrappingWidth": 300}}}%%
+flowchart TD
+    baseline["Committed baseline<br/>Approved scores"] -->|read| test["Run evaluation test<br/>Compare scores and assert"]
+    test -->|write on pass or fail| pending["Pending result<br/>Scores and responses"]
+    pending --> review["quarkus langchain4j-eval review<br/>Inspect scores and responses"]
+    review -->|accept| accept["Replace baseline<br/>Delete pending result"]
+    review -->|reject| reject["Keep baseline<br/>Delete pending result"]
+    accept --> commit["Review the diff and commit"]
+    commit --> baseline
+
+    style baseline fill:#e1f5ff
+    style test fill:#fff4e1
+    style pending fill:#fff4e1
+    style review fill:#ffe1f5
+    style accept fill:#e1ffe1
+    style reject fill:#e1f5ff

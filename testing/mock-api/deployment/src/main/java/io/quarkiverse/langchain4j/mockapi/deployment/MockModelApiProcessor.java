@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.config.ConfigValue;
 
 import io.quarkiverse.langchain4j.deployment.config.LangChain4jBuildConfig;
 import io.quarkiverse.langchain4j.deployment.items.AudioTranscriptionModelProviderCandidateBuildItem;
@@ -150,9 +151,14 @@ public class MockModelApiProcessor {
         Map<String, Function<MockApiStartable, String>> config = new HashMap<>();
         config.put("quarkus.langchain4j.mock-api.url", MockApiStartable::getConnectionInfo);
         endpointSuffixes.forEach((key, suffix) -> config.put(key, s -> s.getConnectionInfo() + suffix));
-        config.put(MockApiConfigSourceFactory.OVERRIDES,
-                s -> MockApiConfigSourceFactory.format(withUrl(s.getConnectionInfo(), endpointSuffixes)));
-        identityDefaultValues(models, ConfigProvider.getConfig()).forEach((key, value) -> config.put(key, s -> value));
+        Map<String, String> identity = identityDefaultValues(models, ConfigProvider.getConfig());
+        Map<String, String> replacingUnexpanded = replacingUnexpanded(identity, ConfigProvider.getConfig());
+        config.put(MockApiConfigSourceFactory.OVERRIDES, s -> {
+            Map<String, String> overrides = new TreeMap<>(withUrl(s.getConnectionInfo(), endpointSuffixes));
+            overrides.putAll(replacingUnexpanded);
+            return MockApiConfigSourceFactory.format(overrides);
+        });
+        identity.forEach((key, value) -> config.put(key, s -> value));
         openAiChatModeDefaults(models, ConfigProvider.getConfig()).forEach((key, value) -> config.put(key, s -> value));
         return DevServicesResultBuildItem.<MockApiStartable> owned()
                 .feature(FEATURE)
@@ -223,7 +229,7 @@ public class MockModelApiProcessor {
                     // a key the user set counts as configured even when its value is empty: setting a key to an empty
                     // value is how a test opts out of a placeholder, for a provider that behaves differently without the key
                     boolean userConfigured = Stream.concat(Stream.of(property), alternatives.stream())
-                            .anyMatch(p -> config.getConfigValue(prefix + p).getRawValue() != null);
+                            .anyMatch(p -> isConfigured(config, prefix + p));
                     if (!userConfigured) {
                         result.put(prefix + property, value);
                     }
@@ -231,6 +237,35 @@ public class MockModelApiProcessor {
             }
         }
         return result;
+    }
+
+    /**
+     * The placeholders that replace a value the user set but that cannot be expanded. Dev-service config sits below
+     * application.properties, where that value would still win and fail the start, so these also go into the
+     * {@code overrides} source above it.
+     */
+    static Map<String, String> replacingUnexpanded(Map<String, String> identity, Config config) {
+        Map<String, String> result = new TreeMap<>();
+        identity.forEach((key, value) -> {
+            if (config.getConfigValue(key).getRawValue() != null) {
+                result.put(key, value);
+            }
+        });
+        return result;
+    }
+
+    /**
+     * Whether the user set a property. A value whose expression cannot be expanded, such as {@code ${OPENAI_API_KEY}}
+     * without that variable, counts as not set: the placeholder then replaces it, where the application would
+     * otherwise fail to start against the mock.
+     */
+    private static boolean isConfigured(Config config, String property) {
+        ConfigValue value = config.getConfigValue(property);
+        if (value.getRawValue() == null) {
+            return false;
+        }
+        // an expression that cannot be expanded leaves the raw value, without a value
+        return value.getValue() != null || !value.getRawValue().contains("${");
     }
 
     /**

@@ -33,6 +33,21 @@ public final class OperationScope {
         admin.postJson("/_admin/replies/" + path(), replies.toArray(new Reply[0]));
     }
 
+    /**
+     * Replies for the chat requests whose last user message contains {@code text}, whatever their order. They take
+     * precedence over the replies queued with {@link #reply(Reply...)} and over the default reply, and stay until
+     * {@link MockModelServer#reset()}. When several match, the first one added wins.
+     *
+     * @param text the text the last user message must contain, case-sensitive
+     * @return where to give the replies
+     */
+    public MatchedReplies whenUserMessageContains(String text) {
+        if (operation != Operation.CHAT) {
+            throw new IllegalStateException("whenUserMessageContains is only supported for CHAT, not " + operation);
+        }
+        return new MatchedReplies(admin, text);
+    }
+
     public void fail(int status, String message) {
         reply(ErrorReply.of(status, message));
     }

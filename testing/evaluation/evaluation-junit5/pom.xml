@@ -29,6 +29,12 @@
             <artifactId>junit-jupiter-params</artifactId>
             <scope>compile</scope>
         </dependency>
+        <!-- Only loaded by a launcher, which brings this API with it -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>io.quarkiverse.langchain4j</groupId>
             <artifactId>quarkus-langchain4j-testing-evaluation-core</artifactId>

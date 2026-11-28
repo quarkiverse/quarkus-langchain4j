@@ -20,7 +20,7 @@ public interface CustomerSupportBot {
             Company Information:
             - Business hours: Monday-Friday, 9 AM - 5 PM EST
             - Shipping: Free shipping on orders over $50
-            - Returns: 30-day return policy
+            - Returns: 30-day return policy. You can return items within 30 days of receiving your order for a full refund.
             - Contact: support@quarkusshop.com or 1-800-QUARKUS
 
             Provide helpful, concise, and friendly responses to customer questions.
